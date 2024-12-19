@@ -10,21 +10,106 @@ start_time = time.time()
 
 def first_song(df):
     song = df.head(1)
-    print(
-        f"{song["Track Name"].iloc[0]} by {song["Artist"].iloc[0]} on {song["DateTime"].iloc[0].strftime("%d %b %Y at %I:%M %p %Z")}")
+    print(f"{song["Track Name"].iloc[0]} by {song["Artist"].iloc[0]} on "
+          f"{song["DateTime"].iloc[0].strftime("%d %b %Y at %I:%M %p %Z")}\n\n")
 
 
-def sum_heard_music(all_lines_df):
-    unfiltered_sum_listened = sum(all_lines_df['Time Played(ms)'])
+def sum_heard_music(df):
+    unfiltered_sum_listened = sum(df['Time Played(ms)'])
     print(
-        f'Entire SUM of music/podcasts played: \n\t {unfiltered_sum_listened} ms, i.e.,\n\t {unfiltered_sum_listened / 1000} secs,'
+        f'Entire SUM of music/podcasts played since {df["DateTime"].iloc[0].strftime("%d %b %Y")}: \n\t '
+        f'{unfiltered_sum_listened} ms, i.e.,\n\t {unfiltered_sum_listened / 1000} secs,'
         f' or\n\t {unfiltered_sum_listened / 60000} minutes, or\n\t {unfiltered_sum_listened / 3600000} hours '
-        f'or\n\t {unfiltered_sum_listened / 86400000} days')
+        f'or\n\t {unfiltered_sum_listened / 86400000} days\n')
 
 
-def most_skipped(all_lines_df):
-    pass
+def most_skipped(df):
+    print(f"\nMost skipped songs since {df["DateTime"].iloc[0].strftime("%d %b %Y")}")
+    # Group by unique combinations of 'Track Name' and 'Artist'
+    summary_df = (
+        df.groupby(["Track Name", "Artist"], as_index=False)
+        .agg(
+            total_ms_played=("Time Played(ms)", "sum"),  # Sum up total milliseconds played
+            skip_count=("skipped", "sum"),  # Count how many times a song was skipped
+            play_count=("skipped", "count")  # Total play count for each song
+        )
+    )
 
+    # Convert milliseconds to seconds for easier readability
+    summary_df["total_seconds_played"] = summary_df["total_ms_played"] / 1000
+    summary_df.drop(columns="total_ms_played", inplace=True)
+
+    # Add skip rate (optional)
+    summary_df["skip_rate"] = (summary_df["skip_count"] / summary_df["play_count"]) * 100
+
+    summary_df = summary_df.sort_values(
+        by=["skip_rate", "play_count"],
+        ascending=[False, False])
+
+    summary_df = summary_df.reset_index(drop=True)
+    summary_df.index = summary_df.index + 1
+
+    # View the summary DataFrame
+    print(summary_df.head())
+    # summary_df.to_csv("temp_file6.csv")
+
+
+def least_skipped(df):
+    print(f"\nLeast skipped songs since {df["DateTime"].iloc[0].strftime("%d %b %Y")}")
+
+    summary_df = (
+        df.groupby(["Track Name", "Artist"], as_index=False)
+        .agg(
+            total_ms_played=("Time Played(ms)", "sum"),  # Sum up total milliseconds played
+            skip_count=("skipped", "sum"),  # Count how many times a song was skipped
+            play_count=("skipped", "count")  # Total play count for each song
+        )
+    )
+    summary_df["total_seconds_played"] = summary_df["total_ms_played"] / 1000
+    summary_df.drop(columns="total_ms_played", inplace=True)
+
+    # Add skip rate (optional)
+    summary_df["skip_rate"] = (summary_df["skip_count"] / summary_df["play_count"]) * 100
+
+    summary_df = summary_df.sort_values(
+        by=["skip_rate", "play_count"],
+        ascending=[True, False])
+
+    summary_df = summary_df.reset_index(drop=True)
+    summary_df.index = summary_df.index + 1
+
+    # View the summary DataFrame
+    print(summary_df.head())
+    # summary_df.to_csv("temp_file7.csv")
+
+
+def most_played(df):
+    print(f"\nMost played songs since {df["DateTime"].iloc[0].strftime("%d %b %Y")}")
+
+    summary_df = (
+        df.groupby(["Track Name", "Artist"], as_index=False)
+        .agg(
+            total_ms_played=("Time Played(ms)", "sum"),  # Sum up total milliseconds played
+            skip_count=("skipped", "sum"),  # Count how many times a song was skipped
+            play_count=("skipped", "count")  # Total play count for each song
+        )
+    )
+    summary_df["total_seconds_played"] = summary_df["total_ms_played"] / 1000
+    summary_df.drop(columns="total_ms_played", inplace=True)
+
+    # Add skip rate (optional)
+    summary_df["skip_rate"] = (summary_df["skip_count"] / summary_df["play_count"]) * 100
+
+    summary_df = summary_df.sort_values(
+        by=["play_count", "skip_count"],
+        ascending=[False, True])
+
+    summary_df = summary_df.reset_index(drop=True)
+    summary_df.index = summary_df.index + 1
+
+    # View the summary DataFrame
+    print(summary_df.head())
+    # summary_df.to_csv("temp_file8.csv")
 
 
 path_to_json = r"my_spotify_data\Spotify Extended Streaming History"
@@ -70,15 +155,17 @@ print(f"{all_lines_df['DateTime'].head()}\n{all_lines_df.tail()}")  '''
 # all_lines_df.to_csv('temp_file4.csv')
 
 filtered_df_2024 = all_lines_df[all_lines_df['DateTime'] > '2024']
+filtered_df_2024 = filtered_df_2024.reset_index(drop=True)
+filtered_df_2024.index = filtered_df_2024.index + 1
 
-sum_heard_music(all_lines_df)
 print(f"First song ever listened to was: ", end="")
 first_song(all_lines_df)
+sum_heard_music(all_lines_df)
 print(f"First song listened to in 2024 was: ", end="")
 first_song(filtered_df_2024)
+most_skipped(all_lines_df)
+least_skipped(all_lines_df)
+most_played(all_lines_df)
 
-print(f'Done in {time.time() - start_time}')
+print(f'\nScript Done in {time.time() - start_time} seconds')
 exit()  # TEMP
-
-print(json.dumps(list(all_lines), indent=2))
-print(f'Done in {time.time() - start_time} seconds')
