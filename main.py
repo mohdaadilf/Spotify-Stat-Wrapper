@@ -3,20 +3,32 @@ import os
 import time
 import pandas
 from itertools import chain
+from datetime import datetime
 
 start_time = time.time()
 
 
-# Store all file locations and collate it to iterate the locations one by one
-file_loc_1 = r"my_spotify_data\Spotify Extended Streaming History\Streaming_History_Audio_2019-2020_0.json"
-file_loc_2 = r"my_spotify_data\Spotify Extended Streaming History\Streaming_History_Audio_2020-2021_1.json"
-file_loc_3 = r"my_spotify_data\Spotify Extended Streaming History\Streaming_History_Audio_2021-2022_2.json"
-file_loc_4 = r"my_spotify_data\Spotify Extended Streaming History\Streaming_History_Audio_2022-2023_3.json"
-file_loc_5 = r"my_spotify_data\Spotify Extended Streaming History\Streaming_History_Audio_2023_4.json"
-file_loc_6 = r"my_spotify_data\Spotify Extended Streaming History\Streaming_History_Audio_2023-2024_5.json"
-file_loc_7 = r"my_spotify_data\Spotify Extended Streaming History\Streaming_History_Audio_2024_6.json"
+def first_song(df):
+    song = df.head(1)
+    print(
+        f"{song["Track Name"].iloc[0]} by {song["Artist"].iloc[0]} on {song["DateTime"].iloc[0].strftime("%d %b %Y at %I:%M %p %Z")}")
 
-all_file_locs = list((file_loc_1, file_loc_2, file_loc_3, file_loc_4, file_loc_5, file_loc_6, file_loc_7))
+
+def sum_heard_music(all_lines_df):
+    unfiltered_sum_listened = sum(all_lines_df['Time Played(ms)'])
+    print(
+        f'Entire SUM of music/podcasts played: \n\t {unfiltered_sum_listened} ms, i.e.,\n\t {unfiltered_sum_listened / 1000} secs,'
+        f' or\n\t {unfiltered_sum_listened / 60000} minutes, or\n\t {unfiltered_sum_listened / 3600000} hours '
+        f'or\n\t {unfiltered_sum_listened / 86400000} days')
+
+
+def most_skipped(all_lines_df):
+    pass
+
+
+
+path_to_json = r"my_spotify_data\Spotify Extended Streaming History"
+all_file_locs = [path_to_json + '\\' + pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
 
 # Go through all the files and store all the data in var 'all_lines'
 all_lines = list()
@@ -54,20 +66,16 @@ print(f"{all_lines_df['DateTime'].head()}\n{all_lines_df.tail()}")  '''
 
 # print(len(all_lines_df))
 # print(all_lines_df.columns)
-# print(all_lines_df)
 
 # all_lines_df.to_csv('temp_file4.csv')
 
-
-def sum_heard_music(all_lines_df):
-    unfiltered_sum_listened = sum(all_lines_df['Time Played(ms)'])
-    print(
-        f'Entire SUM of music/podcasts played: \n\t {unfiltered_sum_listened} ms, i.e.,\n\t {unfiltered_sum_listened / 1000} secs,'
-        f' or\n\t {unfiltered_sum_listened / 60000} minutes, or\n\t {unfiltered_sum_listened / 3600000} hours '
-        f'or\n\t {unfiltered_sum_listened / 86400000} days')
-
+filtered_df_2024 = all_lines_df[all_lines_df['DateTime'] > '2024']
 
 sum_heard_music(all_lines_df)
+print(f"First song ever listened to was: ", end="")
+first_song(all_lines_df)
+print(f"First song listened to in 2024 was: ", end="")
+first_song(filtered_df_2024)
 
 print(f'Done in {time.time() - start_time}')
 exit()  # TEMP
