@@ -36,7 +36,7 @@ This script processes and analyzes Spotify's extended streaming history data. It
 1. Place your Spotify JSON files in the specified folder.
 2. Run the script:
    ```bash
-   python <script_name>.py
+   python main.py
    ```
 
 3. The script will output:
